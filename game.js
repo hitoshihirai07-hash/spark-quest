@@ -1,14 +1,16 @@
-// スパーククエスト（仮）
-// シンプルな1人用育成RPG風ミニゲーム
+// スパーク系ミニRPG（仮）
+// 1体の雷系モンスターで塔を登るターン制RPG
 
 const TOTAL_FLOORS = 30;
 const MAX_LEVEL = 40;
-const SAVE_KEY = "spark_quest_save_v1";
+const SAVE_KEY = "spark_quest_v2";
 
 let stages = [];
 let player = null;
 let currentFloor = 1;
 let maxFloorReached = 1;
+
+let battle = null; // { floor, stage, playerHP, enemyHP, turn }
 
 // -------- ユーティリティ --------
 function randInt(min, max) {
@@ -84,10 +86,8 @@ function gainExp(amount) {
 
 function levelUp() {
   player.level += 1;
-  // レベルアップに必要な経験値は少しずつ増加
   player.expToNext = Math.round(12 + player.level * 4.5);
 
-  // 合計3〜6ポイントをランダムに振り分ける
   const totalPoints = randInt(3, 6);
   const stats = ["maxHP", "attack", "defense", "speed"];
   for (let i = 0; i < totalPoints; i++) {
@@ -102,24 +102,31 @@ function levelUp() {
 }
 
 // -------- 戦闘関連 --------
-function calcDamage(attackerAtk, defenderDef) {
-  const base = attackerAtk - defenderDef * 0.4;
-  const variance = randInt(-2, 2);
+function calcDamage(attackerAtk, defenderDef, power, varianceRange = 2) {
+  const base = attackerAtk * power - defenderDef * 0.4;
+  const variance = randInt(-varianceRange, varianceRange);
   const raw = Math.round(base + variance);
   return Math.max(1, raw);
 }
 
-function performBattle() {
+function startBattle() {
+  if (battle) {
+    appendLog("すでに戦闘中です。", "system");
+    return;
+  }
   const stage = stages.find(s => s.floor === currentFloor);
   if (!stage) return;
 
-  appendLog(`=== ${stage.name} に挑戦 ===`, "system");
+  battle = {
+    floor: currentFloor,
+    stage,
+    playerHP: player.maxHP,
+    enemyHP: stage.enemyHP,
+    turn: 1,
+    guardThisTurn: false
+  };
 
-  let playerHP = player.maxHP;
-  let enemyHP = stage.enemyHP;
-  let turn = 1;
-
-  // 推奨レベルより低い場合、警告だけ出す
+  appendLog(`=== ${stage.name} に挑戦した！ ===`, "system");
   if (player.level < stage.recommendedLevel) {
     appendLog(
       `※ 推奨レベル(${stage.recommendedLevel})より低い状態で挑んでいるようだ…`,
@@ -127,74 +134,113 @@ function performBattle() {
     );
   }
 
-  while (playerHP > 0 && enemyHP > 0 && turn <= 40) {
-    appendLog(`-- ターン${turn} --`, "system");
-
-    // 行動順判定（敵すばやさは簡易的に攻撃力から算出）
-    const enemySpeed = Math.round(stage.enemyAtk * 0.15);
-    const playerGoesFirst =
-      player.speed > enemySpeed ||
-      (player.speed === enemySpeed && Math.random() < 0.5);
-
-    if (playerGoesFirst) {
-      // プレイヤー攻撃
-      const dmgToEnemy = calcDamage(player.attack, stage.enemyDef);
-      enemyHP = Math.max(0, enemyHP - dmgToEnemy);
-      appendLog(`主人公の攻撃！ 敵に${dmgToEnemy}ダメージ。`, "player");
-
-      if (enemyHP <= 0) {
-        appendLog("敵を倒した！", "player");
-        break;
-      }
-
-      // 敵攻撃
-      const dmgToPlayer = calcDamage(stage.enemyAtk, player.defense);
-      playerHP = Math.max(0, playerHP - dmgToPlayer);
-      appendLog(`敵の攻撃！ ${dmgToPlayer}のダメージを受けた。`, "enemy");
-
-      if (playerHP <= 0) {
-        appendLog("力尽きてしまった…", "enemy");
-        break;
-      }
-    } else {
-      // 敵先攻
-      const dmgToPlayer = calcDamage(stage.enemyAtk, player.defense);
-      playerHP = Math.max(0, playerHP - dmgToPlayer);
-      appendLog(`敵の先制攻撃！ ${dmgToPlayer}のダメージを受けた。`, "enemy");
-
-      if (playerHP <= 0) {
-        appendLog("力尽きてしまった…", "enemy");
-        break;
-      }
-
-      const dmgToEnemy = calcDamage(player.attack, stage.enemyDef);
-      enemyHP = Math.max(0, enemyHP - dmgToEnemy);
-      appendLog(`主人公の反撃！ 敵に${dmgToEnemy}ダメージ。`, "player");
-
-      if (enemyHP <= 0) {
-        appendLog("敵を倒した！", "player");
-        break;
-      }
-    }
-
-    turn++;
-  }
-
-  if (playerHP > 0 && enemyHP <= 0) {
-    handleVictory(stage);
-  } else if (playerHP <= 0) {
-    handleDefeat(stage);
-  } else {
-    // ターン数上限で終了した場合は引き分け扱い（プレイヤー側敗北）
-    appendLog("戦いは長引きすぎた…撤退することにした。", "system");
-    handleDefeat(stage);
-  }
-
-  saveGame();
-  updateUI();
+  updateBattleUI();
+  updateCommandState();
 }
 
-function handleVictory(stage) {
+function endBattle() {
+  battle = null;
+  updateBattleUI();
+  updateCommandState();
+}
+
+function playerUseMove(moveId) {
+  if (!battle) {
+    appendLog("まずは「この階層に挑戦する」を押してください。", "system");
+    return;
+  }
+
+  const stage = battle.stage;
+  const enemySpeed = Math.round(stage.enemyAtk * 0.15);
+  const playerFirst =
+    player.speed > enemySpeed ||
+    (player.speed === enemySpeed && Math.random() < 0.5);
+
+  let logPrefix = `-- ターン${battle.turn} --`;
+  appendLog(logPrefix, "system");
+
+  let moveName = "";
+  let power = 1.0;
+  let varianceRange = 2;
+  battle.guardThisTurn = false;
+
+  if (moveId === "tackle") {
+    moveName = "たいあたり";
+    power = 1.0;
+    varianceRange = 1;
+  } else if (moveId === "spark") {
+    moveName = "スパーク";
+    power = 1.2;
+    varianceRange = 3;
+  } else if (moveId === "guard") {
+    moveName = "ガード";
+    power = 0;
+    varianceRange = 0;
+    battle.guardThisTurn = true;
+  }
+
+  const doPlayerAttack = () => {
+    if (moveId === "guard") {
+      appendLog("主人公は身をかためて様子をうかがっている…", "player");
+      return;
+    }
+    const dmg = calcDamage(player.attack, stage.enemyDef, power, varianceRange);
+    battle.enemyHP = Math.max(0, battle.enemyHP - dmg);
+    appendLog(`主人公の${moveName}！ 敵に${dmg}ダメージ。`, "player");
+  };
+
+  const doEnemyAttack = () => {
+    const baseDamage = calcDamage(
+      stage.enemyAtk,
+      player.defense,
+      1.0,
+      2
+    );
+    const dmg = battle.guardThisTurn
+      ? Math.max(1, Math.round(baseDamage * 0.5))
+      : baseDamage;
+    battle.playerHP = Math.max(0, battle.playerHP - dmg);
+    if (battle.guardThisTurn) {
+      appendLog(`敵の攻撃！ ガードして${dmg}ダメージにおさえた。`, "enemy");
+    } else {
+      appendLog(`敵の攻撃！ ${dmg}のダメージを受けた。`, "enemy");
+    }
+  };
+
+  if (playerFirst) {
+    doPlayerAttack();
+    if (battle.enemyHP <= 0) {
+      appendLog("敵を倒した！", "player");
+      finishVictory(stage);
+      return;
+    }
+    doEnemyAttack();
+    if (battle.playerHP <= 0) {
+      appendLog("力尽きてしまった…", "enemy");
+      finishDefeat(stage);
+      return;
+    }
+  } else {
+    doEnemyAttack();
+    if (battle.playerHP <= 0) {
+      appendLog("力尽きてしまった…", "enemy");
+      finishDefeat(stage);
+      return;
+    }
+    doPlayerAttack();
+    if (battle.enemyHP <= 0) {
+      appendLog("敵を倒した！", "player");
+      finishVictory(stage);
+      return;
+    }
+  }
+
+  battle.turn += 1;
+  updateBattleUI();
+  saveGame();
+}
+
+function finishVictory(stage) {
   appendLog(
     `${stage.name} を突破！ EXP${stage.rewardExp} / ${stage.rewardGold}G を獲得。`,
     "system"
@@ -210,6 +256,10 @@ function handleVictory(stage) {
       "system"
     );
   }
+
+  endBattle();
+  saveGame();
+  updateUI();
 }
 
 function calcReviveCost(level, gold) {
@@ -222,7 +272,7 @@ function calcReviveCost(level, gold) {
   return cost;
 }
 
-function handleDefeat(stage) {
+function finishDefeat(stage) {
   appendLog("……敗北してしまった。", "system");
 
   const cost = calcReviveCost(player.level, player.gold);
@@ -233,6 +283,9 @@ function handleDefeat(stage) {
       "system"
     );
     currentFloor = 1;
+    endBattle();
+    saveGame();
+    updateUI();
     return;
   }
 
@@ -266,6 +319,10 @@ function handleDefeat(stage) {
     appendLog("入口に戻ることにした。", "system");
     currentFloor = 1;
   }
+
+  endBattle();
+  saveGame();
+  updateUI();
 }
 
 // -------- セーブ／ロード --------
@@ -309,6 +366,13 @@ function loadGame() {
 }
 
 // -------- UI更新 --------
+function setHpBar(barEl, textEl, current, max) {
+  if (!barEl || !textEl) return;
+  const pct = max > 0 ? Math.max(0, Math.min(100, Math.round((current / max) * 100))) : 0;
+  barEl.style.width = pct + "%";
+  textEl.textContent = `${current} / ${max}`;
+}
+
 function updateUI() {
   const stage = stages.find(s => s.floor === currentFloor);
 
@@ -328,15 +392,77 @@ function updateUI() {
   if (stage) {
     document.getElementById("recommendedLevel").textContent =
       stage.recommendedLevel;
+    document.getElementById("enemyName").textContent = stage.name + "の敵";
+    document.getElementById("enemyLv").textContent = stage.recommendedLevel;
   } else {
     document.getElementById("recommendedLevel").textContent = "-";
+    document.getElementById("enemyName").textContent = "敵なし";
+    document.getElementById("enemyLv").textContent = "-";
   }
 
   // 階層ナビゲーションボタン
   const prevBtn = document.getElementById("prevFloorBtn");
   const nextBtn = document.getElementById("nextFloorBtn");
-  prevBtn.disabled = currentFloor <= 1;
-  nextBtn.disabled = currentFloor >= maxFloorReached;
+  prevBtn.disabled = currentFloor <= 1 || battle !== null;
+  nextBtn.disabled = currentFloor >= maxFloorReached || battle !== null;
+
+  // プレイヤー側バトル表示
+  document.getElementById("playerLvBattle").textContent = player.level;
+
+  if (!battle) {
+    setHpBar(
+      document.getElementById("playerHpBar"),
+      document.getElementById("playerHpText"),
+      player.maxHP,
+      player.maxHP
+    );
+    if (stage) {
+      setHpBar(
+        document.getElementById("enemyHpBar"),
+        document.getElementById("enemyHpText"),
+        stage.enemyHP,
+        stage.enemyHP
+      );
+    } else {
+      setHpBar(
+        document.getElementById("enemyHpBar"),
+        document.getElementById("enemyHpText"),
+        0,
+        1
+      );
+    }
+  } else {
+    setHpBar(
+      document.getElementById("playerHpBar"),
+      document.getElementById("playerHpText"),
+      battle.playerHP,
+      player.maxHP
+    );
+    setHpBar(
+      document.getElementById("enemyHpBar"),
+      document.getElementById("enemyHpText"),
+      battle.enemyHP,
+      battle.stage.enemyHP
+    );
+  }
+}
+
+function updateBattleUI() {
+  updateUI();
+  const commandInfo = document.getElementById("commandInfo");
+  if (!battle) {
+    commandInfo.textContent = "戦闘中ではありません。「この階層に挑戦する」からバトルを開始できます。";
+  } else {
+    commandInfo.textContent = `第${battle.floor}層で戦闘中（ターン${battle.turn}）`;
+  }
+}
+
+function updateCommandState() {
+  const inBattle = battle !== null;
+  document.getElementById("moveTackle").disabled = !inBattle;
+  document.getElementById("moveSpark").disabled = !inBattle;
+  document.getElementById("moveGuard").disabled = !inBattle;
+  document.getElementById("startBattleBtn").disabled = inBattle;
 }
 
 function appendLog(text, type = "system") {
@@ -352,9 +478,9 @@ function appendLog(text, type = "system") {
 // -------- 初期化 --------
 function setupEventListeners() {
   document
-    .getElementById("exploreBtn")
+    .getElementById("startBattleBtn")
     .addEventListener("click", () => {
-      performBattle();
+      startBattle();
     });
 
   document
@@ -368,18 +494,21 @@ function setupEventListeners() {
       player = createNewPlayer();
       currentFloor = 1;
       maxFloorReached = 1;
+      battle = null;
       appendLog("新しく冒険を始めた。", "system");
       saveGame();
-      updateUI();
+      updateBattleUI();
+      updateCommandState();
     });
 
   document
     .getElementById("prevFloorBtn")
     .addEventListener("click", () => {
+      if (battle) return;
       if (currentFloor > 1) {
         currentFloor -= 1;
         appendLog(`第${currentFloor}層に戻った。`, "system");
-        updateUI();
+        updateBattleUI();
         saveGame();
       }
     });
@@ -387,12 +516,31 @@ function setupEventListeners() {
   document
     .getElementById("nextFloorBtn")
     .addEventListener("click", () => {
+      if (battle) return;
       if (currentFloor < maxFloorReached) {
         currentFloor += 1;
         appendLog(`第${currentFloor}層に進んだ。`, "system");
-        updateUI();
+        updateBattleUI();
         saveGame();
       }
+    });
+
+  document
+    .getElementById("moveTackle")
+    .addEventListener("click", () => {
+      playerUseMove("tackle");
+    });
+
+  document
+    .getElementById("moveSpark")
+    .addEventListener("click", () => {
+      playerUseMove("spark");
+    });
+
+  document
+    .getElementById("moveGuard")
+    .addEventListener("click", () => {
+      playerUseMove("guard");
     });
 }
 
@@ -400,5 +548,6 @@ document.addEventListener("DOMContentLoaded", () => {
   stages = generateStages();
   loadGame();
   setupEventListeners();
-  updateUI();
+  updateBattleUI();
+  updateCommandState();
 });

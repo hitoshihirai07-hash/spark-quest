@@ -2,63 +2,115 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>スパーククエスト（仮）</title>
+  <title>スパーク系ミニRPG（仮）</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <main class="container">
     <header class="header">
-      <h1>スパーククエスト（仮）</h1>
-      <p class="subtitle">一体の雷系モンスターを育てて、塔の最上階を目指すミニRPG</p>
+      <h1>スパーク系ミニRPG（仮）</h1>
+      <p class="subtitle">1体の雷系モンスターで塔を登る、シンプルターン制RPG</p>
     </header>
 
-    <section class="status-card">
-      <h2>ステータス</h2>
-      <div class="status-grid">
-        <div><span class="label">レベル</span><span id="level"></span></div>
-        <div><span class="label">EXP</span><span id="exp"></span></div>
-        <div><span class="label">次のレベルまで</span><span id="expToNext"></span></div>
-        <div><span class="label">HP</span><span id="hp"></span></div>
-        <div><span class="label">こうげき</span><span id="attack"></span></div>
-        <div><span class="label">ぼうぎょ</span><span id="defense"></span></div>
-        <div><span class="label">すばやさ</span><span id="speed"></span></div>
-        <div><span class="label">G</span><span id="gold"></span></div>
-      </div>
-    </section>
+    <section class="top-layout">
+      <section class="status-card">
+        <h2>ステータス</h2>
+        <div class="status-grid">
+          <div><span class="label">レベル</span><span id="level"></span></div>
+          <div><span class="label">EXP</span><span id="exp"></span></div>
+          <div><span class="label">次のレベルまで</span><span id="expToNext"></span></div>
+          <div><span class="label">HP</span><span id="hp"></span></div>
+          <div><span class="label">こうげき</span><span id="attack"></span></div>
+          <div><span class="label">ぼうぎょ</span><span id="defense"></span></div>
+          <div><span class="label">すばやさ</span><span id="speed"></span></div>
+          <div><span class="label">G</span><span id="gold"></span></div>
+        </div>
 
-    <section class="floor-card">
-      <h2>階層情報</h2>
-      <div class="floor-info">
-        <div>
-          <span class="label">現在の階層</span>
-          <span id="currentFloor"></span> / <span id="totalFloors"></span>
+        <div class="floor-card-inner">
+          <h3>階層</h3>
+          <div class="floor-info">
+            <div>
+              <span class="label">現在</span>
+              <span id="currentFloor"></span> / <span id="totalFloors"></span>
+            </div>
+            <div>
+              <span class="label">到達済み</span>
+              <span id="maxFloor"></span>
+            </div>
+            <div>
+              <span class="label">推奨レベル</span>
+              <span id="recommendedLevel"></span>
+            </div>
+          </div>
+          <div class="floor-controls">
+            <button id="prevFloorBtn" type="button">◀ 前の階層へ</button>
+            <button id="nextFloorBtn" type="button">次の階層へ ▶</button>
+          </div>
+          <div class="floor-hint">
+            推奨レベルより低い状態で挑むと、敗北しやすくなります。
+          </div>
         </div>
-        <div>
-          <span class="label">到達済み最高階層</span>
-          <span id="maxFloor"></span>
-        </div>
-        <div>
-          <span class="label">推奨レベル</span>
-          <span id="recommendedLevel"></span>
-        </div>
-      </div>
-      <div class="floor-controls">
-        <button id="prevFloorBtn" type="button">◀ 前の階層へ</button>
-        <button id="nextFloorBtn" type="button">次の階層へ ▶</button>
-      </div>
-    </section>
 
-    <section class="actions-card">
-      <h2>行動</h2>
-      <div class="actions">
-        <button id="exploreBtn" type="button">この階層に挑戦する</button>
-        <button id="resetBtn" type="button" class="danger">ゲームを最初から</button>
-      </div>
-      <p class="hint">
-        ※ 推奨レベルより低いと敗北しやすくなります。<br>
-        敗北すると経験値・ゴールドは一切入りませんが、ゴールドを支払って「前の階層からやり直し」することができます。
-      </p>
+        <div class="actions-card-inner">
+          <h3>行動</h3>
+          <div class="actions">
+            <button id="startBattleBtn" type="button">この階層に挑戦する</button>
+            <button id="resetBtn" type="button" class="danger">ゲームを最初から</button>
+          </div>
+          <p class="hint">
+            敗北すると経験値・ゴールドは一切入りません。<br>
+            ゴールドを支払えば「1つ前の階層から再開」することができます。
+          </p>
+        </div>
+      </section>
+
+      <section class="battle-card">
+        <h2>バトル</h2>
+
+        <div class="battle-side">
+          <div class="battle-unit player-unit">
+            <div class="unit-name">主人公（雷）</div>
+            <div class="unit-lv">Lv <span id="playerLvBattle"></span></div>
+            <div class="hp-bar-wrap">
+              <span class="hp-label">HP</span>
+              <div class="hp-bar">
+                <div id="playerHpBar" class="hp-bar-inner"></div>
+              </div>
+              <span id="playerHpText" class="hp-text"></span>
+            </div>
+          </div>
+
+          <div class="battle-unit enemy-unit">
+            <div class="unit-name"><span id="enemyName">敵なし</span></div>
+            <div class="unit-lv">推奨Lv <span id="enemyLv"></span></div>
+            <div class="hp-bar-wrap">
+              <span class="hp-label">HP</span>
+              <div class="hp-bar">
+                <div id="enemyHpBar" class="hp-bar-inner enemy"></div>
+              </div>
+              <span id="enemyHpText" class="hp-text"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="command-card">
+          <h3>コマンド</h3>
+          <div id="commandInfo" class="command-info">
+            戦闘中に使うわざを選んでください。
+          </div>
+          <div class="commands">
+            <button id="moveTackle" type="button" disabled>たいあたり</button>
+            <button id="moveSpark" type="button" disabled>スパーク</button>
+            <button id="moveGuard" type="button" disabled>ガード</button>
+          </div>
+          <p class="hint small">
+            ・たいあたり：安定した物理攻撃<br>
+            ・スパーク：少し強力な攻撃（ダメージ幅やや大きめ）<br>
+            ・ガード：受けるダメージを減らす（このターンのみ）
+          </p>
+        </div>
+      </section>
     </section>
 
     <section class="log-card">

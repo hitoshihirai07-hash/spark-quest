@@ -10,44 +10,42 @@ body {
 }
 
 .container {
-  max-width: 960px;
+  max-width: 980px;
   margin: 0 auto;
-  padding: 16px;
+  padding: 12px;
 }
 
 .header {
   text-align: center;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
 }
 
 .header h1 {
   margin: 0;
-  font-size: 1.8rem;
+  font-size: 1.7rem;
 }
 
 .subtitle {
   margin: 4px 0 0;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: #555;
 }
 
 section {
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .status-card,
-.floor-card,
-.actions-card,
+.battle-card,
 .log-card {
-  background: #fff;
+  background: #ffffff;
   border-radius: 8px;
-  padding: 12px 14px;
+  padding: 10px 12px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.06);
 }
 
 .status-card h2,
-.floor-card h2,
-.actions-card h2,
+.battle-card h2,
 .log-card h2 {
   margin: 0 0 8px;
   font-size: 1rem;
@@ -56,8 +54,8 @@ section {
 .status-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 6px 12px;
-  font-size: 0.85rem;
+  gap: 4px 10px;
+  font-size: 0.8rem;
 }
 
 .status-grid div {
@@ -69,25 +67,55 @@ section {
   color: #555;
 }
 
+.floor-card-inner {
+  margin-top: 8px;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 6px;
+}
+
+.floor-card-inner h3,
+.actions-card-inner h3 {
+  margin: 0 0 4px;
+  font-size: 0.9rem;
+}
+
 .floor-info {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 6px 12px;
-  font-size: 0.85rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px 8px;
+  font-size: 0.8rem;
 }
 
 .floor-controls {
   display: flex;
   justify-content: space-between;
-  gap: 8px;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.floor-hint {
+  margin-top: 4px;
+  font-size: 0.7rem;
+  color: #666;
+}
+
+.actions-card-inner {
   margin-top: 8px;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 6px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
 button {
   border: none;
   border-radius: 6px;
-  padding: 8px 10px;
-  font-size: 0.9rem;
+  padding: 7px 9px;
+  font-size: 0.85rem;
   cursor: pointer;
   background: #2563eb;
   color: #fff;
@@ -116,16 +144,108 @@ button.danger:hover {
   background: #b91c1c;
 }
 
-.actions {
+.hint {
+  margin: 6px 0 0;
+  font-size: 0.75rem;
+  color: #555;
+}
+
+.hint.small {
+  font-size: 0.7rem;
+}
+
+.top-layout {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.battle-card {
+  display: flex;
+  flex-direction: column;
   gap: 8px;
 }
 
-.hint {
-  margin: 8px 0 0;
+.battle-side {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.battle-unit {
+  border-radius: 8px;
+  padding: 6px 8px;
+  background: #eff6ff;
+}
+
+.battle-unit.enemy-unit {
+  background: #fef3c7;
+}
+
+.unit-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.unit-lv {
+  font-size: 0.8rem;
+  color: #555;
+  margin-top: 2px;
+}
+
+.hp-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.hp-label {
   font-size: 0.75rem;
   color: #555;
+}
+
+.hp-bar {
+  flex: 1;
+  height: 8px;
+  border-radius: 999px;
+  background: #e5e7eb;
+  overflow: hidden;
+}
+
+.hp-bar-inner {
+  height: 100%;
+  width: 100%;
+  background: #22c55e;
+  transition: width 0.15s ease;
+}
+
+.hp-bar-inner.enemy {
+  background: #f97316;
+}
+
+.hp-text {
+  font-size: 0.75rem;
+  width: 70px;
+  text-align: right;
+}
+
+.command-card h3 {
+  margin: 0 0 4px;
+  font-size: 0.9rem;
+}
+
+.command-info {
+  font-size: 0.8rem;
+  margin-bottom: 4px;
+  min-height: 30px;
+}
+
+.commands {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
 }
 
 .log {
@@ -156,15 +276,19 @@ button.danger:hover {
   color: #fecaca;
 }
 
-@media (min-width: 720px) {
+@media (min-width: 800px) {
   .top-layout {
-    display: grid;
-    grid-template-columns: 1.1fr 0.9fr;
-    gap: 12px;
+    flex-direction: row;
+    align-items: flex-start;
+  }
+  .status-card {
+    flex: 1;
+  }
+  .battle-card {
+    flex: 1.1;
   }
 }
 
-/* Slight tweak for small screens */
 @media (max-width: 480px) {
   .status-grid {
     grid-template-columns: 1fr;
