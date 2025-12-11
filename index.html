@@ -11,34 +11,53 @@
     <header class="header">
       <h1>タスクメモパッド（自分用）</h1>
       <p class="subtitle">
-        電車の中で思いついた「やること」や「あとでまとめること」を、<br>
-        ざっと書いてあとでスプレッドシートに転記するためのメモ用ツールです。
+        電車の中で思いついたタスクを、ざっと書いておいて、あとでスプレッドシート（タスク管理）に貼るためのメモ用ツールです。
       </p>
     </header>
 
     <section class="input-card">
-      <h2>新しいメモを追加</h2>
+      <h2>新しいタスクを追加</h2>
       <form id="taskForm">
         <div class="field">
-          <label for="date">日付</label>
-          <input id="date" name="date" type="date">
+          <label for="title">タスク名（必須）</label>
+          <input id="title" name="title" type="text" placeholder="例：S2 第◯話 投稿日">
         </div>
         <div class="field">
-          <label for="category">種別</label>
+          <label for="category">カテゴリ</label>
           <select id="category" name="category">
             <option value="小説">小説</option>
             <option value="DQサイト">DQサイト</option>
             <option value="RTA">RTA</option>
+            <option value="日常">日常</option>
             <option value="その他" selected>その他</option>
           </select>
         </div>
         <div class="field">
-          <label for="title">タイトル / 用件（必須）</label>
-          <input id="title" name="title" type="text" placeholder="例：S2 第◯話 投稿日メモ">
+          <label for="date">予定日</label>
+          <input id="date" name="date" type="date">
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="priority">優先度</label>
+            <select id="priority" name="priority">
+              <option value=""></option>
+              <option value="A">A</option>
+              <option value="B" selected>B</option>
+              <option value="C">C</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="status">状態</label>
+            <select id="status" name="status">
+              <option value="未着手" selected>未着手</option>
+              <option value="作業中">作業中</option>
+              <option value="完了">完了</option>
+            </select>
+          </div>
         </div>
         <div class="field">
           <label for="memo">メモ（任意）</label>
-          <textarea id="memo" name="memo" rows="3" placeholder="例：投稿したらBOOTHのリンク追記する、など"></textarea>
+          <textarea id="memo" name="memo" rows="3" placeholder="例：投稿したらBOOTHリンク追記、など"></textarea>
         </div>
         <div class="actions">
           <button type="submit" class="primary">追加</button>
@@ -46,13 +65,13 @@
         </div>
       </form>
       <p class="hint">
-        ※ タイトルだけでもOKです。<br>
+        ※ タスク名だけでもOKです。<br>
         ※ スプレッドシートに転記したら「転記済」にチェックを入れておくと管理しやすいです。
       </p>
     </section>
 
     <section class="list-card">
-      <h2>メモ一覧</h2>
+      <h2>タスク一覧</h2>
       <div class="list-toolbar">
         <div class="filter-group">
           <label for="filterCategory">表示：</label>
@@ -73,8 +92,9 @@
     <section class="export-card">
       <h2>スプレッドシート用テキスト</h2>
       <p class="hint">
-        下のテキストは、ボタンを押すと「日付／種別／タイトル／メモ／転記済」の順でタブ区切りに整形されます。<br>
-        長押ししてコピーし、そのままスプレッドシートに貼り付ければ1行ずつ入ります。
+        ボタンを押すと、<strong>タスク名／カテゴリ／予定日／優先度／状態／メモ</strong> の順でタブ区切りのテキストを作ります。<br>
+        長押しでコピーして「タスク管理」のシートに貼り付ければ、そのまま各列に入ります。<br>
+        ※ 1行目はヘッダー行なので、必要に応じて削除して使ってください。
       </p>
       <textarea id="exportText" rows="5" class="export-text" placeholder="ここにコピー用テキストが出ます"></textarea>
     </section>
@@ -82,9 +102,9 @@
     <section class="danger-card">
       <h2>データの削除</h2>
       <p class="hint">
-        ここで削除すると、この端末・このブラウザに保存されているメモがすべて消えます。
+        ここで削除すると、この端末・このブラウザに保存されているタスクがすべて消えます。
       </p>
-      <button type="button" id="deleteAllBtn" class="danger">すべてのメモを削除</button>
+      <button type="button" id="deleteAllBtn" class="danger">すべてのタスクを削除</button>
     </section>
   </main>
 

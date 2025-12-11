@@ -1,7 +1,7 @@
 // タスクメモパッド（自分用）
-// 電車などでサッと書いてあとでスプレッドシートに貼る用
+// 「タスク管理 - Tasks」の列構成に合わせてエクスポートする
 
-const STORAGE_KEY = "task_pad_v1";
+const STORAGE_KEY = "task_pad_v2";
 
 let tasks = [];
 
@@ -64,7 +64,7 @@ function renderTasks() {
   if (filtered.length === 0) {
     const empty = document.createElement("div");
     empty.className = "hint";
-    empty.textContent = "まだメモがありません。上のフォームから追加してください。";
+    empty.textContent = "まだタスクがありません。上のフォームから追加してください。";
     listEl.appendChild(empty);
     return;
   }
@@ -77,22 +77,42 @@ function renderTasks() {
     const header = document.createElement("div");
     header.className = "task-header";
 
-    const dateSpan = document.createElement("div");
-    dateSpan.className = "task-date";
-    dateSpan.textContent = task.date || "(日付なし)";
-
-    const categorySpan = document.createElement("div");
-    categorySpan.className = "task-category";
-    categorySpan.textContent = task.category || "その他";
-
-    header.appendChild(dateSpan);
-    header.appendChild(categorySpan);
-    item.appendChild(header);
-
     const titleDiv = document.createElement("div");
-    titleDiv.className = "task-title";
+    titleDiv.className = "task-title-main";
     titleDiv.textContent = task.title || "(無題)";
-    item.appendChild(titleDiv);
+
+    const badges = document.createElement("div");
+    badges.className = "task-badges";
+
+    const catSpan = document.createElement("div");
+    catSpan.className = "task-category";
+    catSpan.textContent = task.category || "その他";
+    badges.appendChild(catSpan);
+
+    if (task.date) {
+      const dateSpan = document.createElement("div");
+      dateSpan.className = "task-date";
+      dateSpan.textContent = task.date;
+      badges.appendChild(dateSpan);
+    }
+
+    if (task.priority) {
+      const pSpan = document.createElement("div");
+      pSpan.className = "task-priority";
+      pSpan.textContent = `優先度 ${task.priority}`;
+      badges.appendChild(pSpan);
+    }
+
+    if (task.status) {
+      const sSpan = document.createElement("div");
+      sSpan.className = "task-status";
+      sSpan.textContent = task.status;
+      badges.appendChild(sSpan);
+    }
+
+    header.appendChild(titleDiv);
+    header.appendChild(badges);
+    item.appendChild(header);
 
     if (task.memo && task.memo.trim() !== "") {
       const memoDiv = document.createElement("div");
@@ -123,7 +143,7 @@ function renderTasks() {
     delBtn.type = "button";
     delBtn.textContent = "削除";
     delBtn.addEventListener("click", () => {
-      const ok = window.confirm("このメモを削除しますか？");
+      const ok = window.confirm("このタスクを削除しますか？");
       if (!ok) return;
       tasks = tasks.filter((t) => t.id !== task.id);
       saveTasks();
@@ -142,13 +162,15 @@ function renderTasks() {
 // ---- イベント処理 ----
 function handleFormSubmit(ev) {
   ev.preventDefault();
-  const date = document.getElementById("date").value || todayIso();
-  const category = document.getElementById("category").value || "その他";
   const title = document.getElementById("title").value.trim();
+  const category = document.getElementById("category").value || "その他";
+  const date = document.getElementById("date").value || "";
+  const priority = document.getElementById("priority").value || "";
+  const status = document.getElementById("status").value || "未着手";
   const memo = document.getElementById("memo").value.trim();
 
   if (!title && !memo) {
-    window.alert("タイトルかメモのどちらかは入力してください。");
+    window.alert("タスク名かメモのどちらかは入力してください。");
     return;
   }
 
@@ -156,9 +178,11 @@ function handleFormSubmit(ev) {
 
   const task = {
     id: now.toString() + "_" + Math.floor(Math.random() * 1000),
-    date,
-    category,
     title,
+    category,
+    date,
+    priority,
+    status,
     memo,
     done: false,
     createdAt: now
@@ -178,8 +202,10 @@ function handleClearForm() {
   document.getElementById("memo").value = "";
 }
 
+// 「タスク管理 - Tasks」に合わせたエクスポート
+// 列順：タスク名, カテゴリ, 予定日, 優先度, 状態, メモ
 function buildExportText(onlyUndone = false) {
-  const header = "日付\t種別\tタイトル\tメモ\t転記済";
+  const header = "タスク名\tカテゴリ\t予定日\t優先度\t状態\tメモ";
   const lines = [header];
 
   const sorted = [...tasks].sort((a, b) => {
@@ -191,12 +217,13 @@ function buildExportText(onlyUndone = false) {
 
   sorted.forEach((t) => {
     if (onlyUndone && t.done) return;
-    const date = t.date || "";
-    const cat = t.category || "";
     const title = (t.title || "").replace(/\n/g, " ");
+    const cat = t.category || "";
+    const date = t.date || "";
+    const priority = t.priority || "";
+    const status = t.status || "";
     const memo = (t.memo || "").replace(/\n/g, " ");
-    const done = t.done ? "済" : "";
-    lines.push([date, cat, title, memo, done].join("\t"));
+    lines.push([title, cat, date, priority, status, memo].join("\t"));
   });
 
   const text = lines.join("\n");
@@ -205,14 +232,13 @@ function buildExportText(onlyUndone = false) {
   textArea.focus();
   textArea.select();
 
-  // クリップボード対応ブラウザならそのままコピーも試みる
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(text).catch(() => {});
   }
 }
 
 function handleDeleteAll() {
-  const ok = window.confirm("すべてのメモを削除しますか？\nこの端末のデータが消えます。");
+  const ok = window.confirm("すべてのタスクを削除しますか？\nこの端末のデータが消えます。");
   if (!ok) return;
   tasks = [];
   saveTasks();

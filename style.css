@@ -57,6 +57,15 @@ section {
   margin-bottom: 8px;
 }
 
+.field-row {
+  display: flex;
+  gap: 8px;
+}
+
+.field-row .field {
+  flex: 1;
+}
+
 .field label {
   display: block;
   font-size: 0.8rem;
@@ -183,21 +192,44 @@ button.danger:hover {
   margin-bottom: 4px;
 }
 
-.task-date {
+.task-title-main {
   font-weight: 600;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
+}
+
+.task-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  font-size: 0.75rem;
 }
 
 .task-category {
-  font-size: 0.75rem;
   padding: 2px 6px;
   border-radius: 999px;
   background: #e0f2fe;
   color: #0369a1;
 }
 
-.task-title {
-  font-size: 0.85rem;
+.task-date {
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.task-priority {
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.task-status {
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: #e5e7eb;
+  color: #374151;
 }
 
 .task-memo {
@@ -242,5 +274,8 @@ button.danger:hover {
   }
   .copy-group {
     margin-left: 0;
+  }
+  .field-row {
+    flex-direction: column;
   }
 }
