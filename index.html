@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>タスクメモパッド（自分用）</title>
+  <title>タスクメモパッド（自分用・同期対応）</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
 </head>
@@ -11,7 +11,8 @@
     <header class="header">
       <h1>タスクメモパッド（自分用）</h1>
       <p class="subtitle">
-        電車の中で思いついたタスクを、ざっと書いておいて、あとでスプレッドシート（タスク管理）に貼るためのメモ用ツールです。
+        電車の中で思いついたタスクをスマホでメモして、<br>
+        家のPCでまとめて「タスク管理」シートに転記するためのツールです。
       </p>
     </header>
 
@@ -97,6 +98,20 @@
         ※ 1行目はヘッダー行なので、必要に応じて削除して使ってください。
       </p>
       <textarea id="exportText" rows="5" class="export-text" placeholder="ここにコピー用テキストが出ます"></textarea>
+    </section>
+
+    <section class="sync-card">
+      <h2>スマホ ↔ PC 用 データ共有</h2>
+      <p class="hint">
+        スマホで入力したタスクを、家のPCでも同じように表示したい場合に使います。<br>
+        1. スマホ側で「この端末のデータを書き出し」を押して、下のテキストをコピーして自分宛てに送る（メール / DM など）。<br>
+        2. 家のPCでこのページを開き、そのテキストを下に貼り付けて「ここに貼ったデータを読み込む」を押す。
+      </p>
+      <textarea id="syncData" rows="5" class="export-text" placeholder="ここにJSONデータが入ります（自分専用なので中身は気にしなくてOK）"></textarea>
+      <div class="actions">
+        <button type="button" id="exportSyncBtn">この端末のデータを書き出し</button>
+        <button type="button" id="importSyncBtn" class="primary">ここに貼ったデータを読み込む</button>
+      </div>
     </section>
 
     <section class="danger-card">

@@ -1,7 +1,7 @@
-// タスクメモパッド（自分用）
-// 「タスク管理 - Tasks」の列構成に合わせてエクスポートする
+// タスクメモパッド（自分用・同期対応）
+// 「タスク管理 - Tasks」の列構成に合わせてエクスポート＋スマホ↔PC手動同期
 
-const STORAGE_KEY = "task_pad_v2";
+const STORAGE_KEY = "task_pad_sync_v1";
 
 let tasks = [];
 
@@ -245,9 +245,61 @@ function handleDeleteAll() {
   renderTasks();
 }
 
+// ---- スマホ ↔ PC 手動同期 ----
+function exportSyncData() {
+  const data = {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    tasks
+  };
+  const jsonText = JSON.stringify(data);
+  const ta = document.getElementById("syncData");
+  ta.value = jsonText;
+  ta.focus();
+  ta.select();
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(jsonText).catch(() => {});
+  }
+}
+
+function importSyncData() {
+  const ta = document.getElementById("syncData");
+  const text = ta.value.trim();
+  if (!text) {
+    window.alert("読み込むデータが空です。");
+    return;
+  }
+  let obj;
+  try {
+    obj = JSON.parse(text);
+  } catch (e) {
+    window.alert("JSONの読み込みに失敗しました。貼り付けた内容を確認してください。");
+    return;
+  }
+  if (!obj || !Array.isArray(obj.tasks)) {
+    // tasksだけ貼った場合も考慮
+    if (Array.isArray(obj)) {
+      const ok2 = window.confirm("このデータですべてのタスクを上書きしますか？");
+      if (!ok2) return;
+      tasks = obj;
+      saveTasks();
+      renderTasks();
+      return;
+    }
+    window.alert("形式が想定と異なります。");
+    return;
+  }
+
+  const ok = window.confirm("このデータですべてのタスクを上書きしますか？\n（現在のこの端末のタスクは置き換えられます）");
+  if (!ok) return;
+
+  tasks = obj.tasks;
+  saveTasks();
+  renderTasks();
+}
+
 // ---- 初期化 ----
 document.addEventListener("DOMContentLoaded", () => {
-  // 日付初期値
   const dateInput = document.getElementById("date");
   dateInput.value = todayIso();
 
@@ -260,4 +312,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("copyAllBtn").addEventListener("click", () => buildExportText(false));
   document.getElementById("copyUndoneBtn").addEventListener("click", () => buildExportText(true));
   document.getElementById("deleteAllBtn").addEventListener("click", handleDeleteAll);
+
+  document.getElementById("exportSyncBtn").addEventListener("click", exportSyncData);
+  document.getElementById("importSyncBtn").addEventListener("click", importSyncData);
 });

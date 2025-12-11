@@ -38,6 +38,7 @@ section {
 .input-card,
 .list-card,
 .export-card,
+.sync-card,
 .danger-card {
   background: #ffffff;
   border-radius: 10px;
@@ -48,6 +49,7 @@ section {
 .input-card h2,
 .list-card h2,
 .export-card h2,
+.sync-card h2,
 .danger-card h2 {
   margin: 0 0 8px;
   font-size: 1rem;
@@ -89,6 +91,7 @@ section {
 
 .actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   margin-top: 6px;
 }
