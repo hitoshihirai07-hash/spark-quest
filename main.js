@@ -1,146 +1,237 @@
-// でんちペット（仮）
-// 超ゆるい1体育成。状態は自動減少なしで、ボタンを押したときだけ変化。
+// タスクメモパッド（自分用）
+// 電車などでサッと書いてあとでスプレッドシートに貼る用
 
-const SAVE_KEY = "denchi_pet_v1";
+const STORAGE_KEY = "task_pad_v1";
 
-let pet = {
-  mood: 70,     // なつき
-  hunger: 70,   // おなか
-  energy: 70    // げんき
-};
+let tasks = [];
 
-// ------- ユーティリティ -------
-function clamp(val, min, max) {
-  return Math.max(min, Math.min(max, val));
+// ---- ユーティリティ ----
+function todayIso() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = ("0" + (d.getMonth() + 1)).slice(-2);
+  const day = ("0" + d.getDate()).slice(-2);
+  return `${y}-${m}-${day}`;
 }
 
-function loadPet() {
+function loadTasks() {
   try {
-    const raw = localStorage.getItem(SAVE_KEY);
-    if (!raw) return;
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) {
+      tasks = [];
+      return;
+    }
     const data = JSON.parse(raw);
-    if (typeof data.mood === "number") pet.mood = data.mood;
-    if (typeof data.hunger === "number") pet.hunger = data.hunger;
-    if (typeof data.energy === "number") pet.energy = data.energy;
+    if (Array.isArray(data)) {
+      tasks = data;
+    } else {
+      tasks = [];
+    }
   } catch (e) {
     console.warn("ロードに失敗:", e);
+    tasks = [];
   }
 }
 
-function savePet() {
+function saveTasks() {
   try {
-    localStorage.setItem(SAVE_KEY, JSON.stringify(pet));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
   } catch (e) {
     console.warn("セーブに失敗:", e);
   }
 }
 
-function appendLog(text, type = "system") {
-  const logEl = document.getElementById("log");
-  if (!logEl) return;
-  const line = document.createElement("div");
-  line.className = "log-line " + type;
-  line.textContent = text;
-  logEl.appendChild(line);
-  logEl.scrollTop = logEl.scrollHeight;
-}
+// ---- 描画 ----
+function renderTasks() {
+  const listEl = document.getElementById("taskList");
+  listEl.innerHTML = "";
 
-// ------- UI更新 -------
-function updateBars() {
-  const moodPct = clamp(pet.mood, 0, 100);
-  const hungerPct = clamp(pet.hunger, 0, 100);
-  const energyPct = clamp(pet.energy, 0, 100);
+  const filterVal = document.getElementById("filterCategory").value;
 
-  const barMood = document.getElementById("barMood");
-  const barHunger = document.getElementById("barHunger");
-  const barEnergy = document.getElementById("barEnergy");
-
-  barMood.style.width = moodPct + "%";
-  barHunger.style.width = hungerPct + "%";
-  barEnergy.style.width = energyPct + "%";
-
-  document.getElementById("valMood").textContent = moodPct;
-  document.getElementById("valHunger").textContent = hungerPct;
-  document.getElementById("valEnergy").textContent = energyPct;
-
-  updatePetImageAndMessage();
-}
-
-function updatePetImageAndMessage() {
-  const imgEl = document.getElementById("petImage");
-  const msgEl = document.getElementById("statusMessage");
-
-  const mood = clamp(pet.mood, 0, 100);
-  const hunger = clamp(pet.hunger, 0, 100);
-  const energy = clamp(pet.energy, 0, 100);
-
-  let img = "img/denchi_normal.png";
-  let msg = "";
-
-  if (energy > 70 && mood > 70 && hunger > 40) {
-    img = "img/denchi_happy.png";
-    msg = "とてもごきげんで、ピカピカ元気そうだ。";
-  } else if (energy < 30 || hunger < 30) {
-    img = "img/denchi_tired.png";
-    if (hunger < 30 && energy < 30) {
-      msg = "おなかもげんきも足りないみたいだ…。何かしてあげよう。";
-    } else if (hunger < 30) {
-      msg = "おなかがすいているようだ。おやつが欲しそうにしている。";
-    } else {
-      msg = "ちょっとお疲れ気味。やすませてあげたほうがよさそう。";
+  const sorted = [...tasks].sort((a, b) => {
+    if (a.date === b.date) {
+      return (a.createdAt || 0) - (b.createdAt || 0);
     }
-  } else if (mood < 40) {
-    img = "img/denchi_normal.png";
-    msg = "少しさみしそうにしている。なでてほしそうだ。";
-  } else {
-    img = "img/denchi_normal.png";
-    msg = "のんびりしている。特に不満はなさそうだ。";
+    return (a.date || "").localeCompare(b.date || "");
+  });
+
+  const filtered = sorted.filter((t) => {
+    if (filterVal === "未転記") return !t.done;
+    if (filterVal === "転記済") return !!t.done;
+    return true;
+  });
+
+  if (filtered.length === 0) {
+    const empty = document.createElement("div");
+    empty.className = "hint";
+    empty.textContent = "まだメモがありません。上のフォームから追加してください。";
+    listEl.appendChild(empty);
+    return;
   }
 
-  imgEl.src = img;
-  msgEl.textContent = msg;
+  filtered.forEach((task) => {
+    const item = document.createElement("div");
+    item.className = "task-item";
+    if (task.done) item.classList.add("done");
+
+    const header = document.createElement("div");
+    header.className = "task-header";
+
+    const dateSpan = document.createElement("div");
+    dateSpan.className = "task-date";
+    dateSpan.textContent = task.date || "(日付なし)";
+
+    const categorySpan = document.createElement("div");
+    categorySpan.className = "task-category";
+    categorySpan.textContent = task.category || "その他";
+
+    header.appendChild(dateSpan);
+    header.appendChild(categorySpan);
+    item.appendChild(header);
+
+    const titleDiv = document.createElement("div");
+    titleDiv.className = "task-title";
+    titleDiv.textContent = task.title || "(無題)";
+    item.appendChild(titleDiv);
+
+    if (task.memo && task.memo.trim() !== "") {
+      const memoDiv = document.createElement("div");
+      memoDiv.className = "task-memo";
+      memoDiv.textContent = task.memo;
+      item.appendChild(memoDiv);
+    }
+
+    const footer = document.createElement("div");
+    footer.className = "task-footer";
+
+    const doneLabel = document.createElement("label");
+    const doneCheckbox = document.createElement("input");
+    doneCheckbox.type = "checkbox";
+    doneCheckbox.checked = !!task.done;
+    doneCheckbox.addEventListener("change", () => {
+      task.done = doneCheckbox.checked;
+      saveTasks();
+      renderTasks();
+    });
+    const doneText = document.createElement("span");
+    doneText.textContent = "転記済";
+
+    doneLabel.appendChild(doneCheckbox);
+    doneLabel.appendChild(doneText);
+
+    const delBtn = document.createElement("button");
+    delBtn.type = "button";
+    delBtn.textContent = "削除";
+    delBtn.addEventListener("click", () => {
+      const ok = window.confirm("このメモを削除しますか？");
+      if (!ok) return;
+      tasks = tasks.filter((t) => t.id !== task.id);
+      saveTasks();
+      renderTasks();
+    });
+
+    footer.appendChild(doneLabel);
+    footer.appendChild(delBtn);
+
+    item.appendChild(footer);
+
+    listEl.appendChild(item);
+  });
 }
 
-// ------- アクション処理 -------
-function doPet() {
-  // なでる：なつき↑、げんき↓少し
-  pet.mood = clamp(pet.mood + 15, 0, 100);
-  pet.energy = clamp(pet.energy - 5, 0, 100);
-  appendLog("なでてあげた。うれしそうにしている。", "action");
-  afterAction();
+// ---- イベント処理 ----
+function handleFormSubmit(ev) {
+  ev.preventDefault();
+  const date = document.getElementById("date").value || todayIso();
+  const category = document.getElementById("category").value || "その他";
+  const title = document.getElementById("title").value.trim();
+  const memo = document.getElementById("memo").value.trim();
+
+  if (!title && !memo) {
+    window.alert("タイトルかメモのどちらかは入力してください。");
+    return;
+  }
+
+  const now = Date.now();
+
+  const task = {
+    id: now.toString() + "_" + Math.floor(Math.random() * 1000),
+    date,
+    category,
+    title,
+    memo,
+    done: false,
+    createdAt: now
+  };
+
+  tasks.push(task);
+  saveTasks();
+
+  document.getElementById("title").value = "";
+  document.getElementById("memo").value = "";
+
+  renderTasks();
 }
 
-function doSnack() {
-  // おやつ：おなか↑、なつき↑少し
-  pet.hunger = clamp(pet.hunger + 20, 0, 100);
-  pet.mood = clamp(pet.mood + 5, 0, 100);
-  appendLog("おやつをあげた。もぐもぐ食べている。", "action");
-  afterAction();
+function handleClearForm() {
+  document.getElementById("title").value = "";
+  document.getElementById("memo").value = "";
 }
 
-function doRest() {
-  // やすませる：げんき↑、おなか↓少し
-  pet.energy = clamp(pet.energy + 20, 0, 100);
-  pet.hunger = clamp(pet.hunger - 8, 0, 100);
-  appendLog("少し休ませた。すこしスッキリしたようだ。", "action");
-  afterAction();
+function buildExportText(onlyUndone = false) {
+  const header = "日付\t種別\tタイトル\tメモ\t転記済";
+  const lines = [header];
+
+  const sorted = [...tasks].sort((a, b) => {
+    if (a.date === b.date) {
+      return (a.createdAt || 0) - (b.createdAt || 0);
+    }
+    return (a.date || "").localeCompare(b.date || "");
+  });
+
+  sorted.forEach((t) => {
+    if (onlyUndone && t.done) return;
+    const date = t.date || "";
+    const cat = t.category || "";
+    const title = (t.title || "").replace(/\n/g, " ");
+    const memo = (t.memo || "").replace(/\n/g, " ");
+    const done = t.done ? "済" : "";
+    lines.push([date, cat, title, memo, done].join("\t"));
+  });
+
+  const text = lines.join("\n");
+  const textArea = document.getElementById("exportText");
+  textArea.value = text;
+  textArea.focus();
+  textArea.select();
+
+  // クリップボード対応ブラウザならそのままコピーも試みる
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).catch(() => {});
+  }
 }
 
-function afterAction() {
-  updateBars();
-  savePet();
+function handleDeleteAll() {
+  const ok = window.confirm("すべてのメモを削除しますか？\nこの端末のデータが消えます。");
+  if (!ok) return;
+  tasks = [];
+  saveTasks();
+  renderTasks();
 }
 
-// ------- 初期化 -------
-function setupEvents() {
-  document.getElementById("btnPet").addEventListener("click", doPet);
-  document.getElementById("btnSnack").addEventListener("click", doSnack);
-  document.getElementById("btnRest").addEventListener("click", doRest);
-}
-
+// ---- 初期化 ----
 document.addEventListener("DOMContentLoaded", () => {
-  loadPet();
-  setupEvents();
-  updateBars();
-  appendLog("でんちペットとの生活が始まった。気が向いたときだけお世話してあげよう。", "system");
+  // 日付初期値
+  const dateInput = document.getElementById("date");
+  dateInput.value = todayIso();
+
+  loadTasks();
+  renderTasks();
+
+  document.getElementById("taskForm").addEventListener("submit", handleFormSubmit);
+  document.getElementById("clearFormBtn").addEventListener("click", handleClearForm);
+  document.getElementById("filterCategory").addEventListener("change", renderTasks);
+  document.getElementById("copyAllBtn").addEventListener("click", () => buildExportText(false));
+  document.getElementById("copyUndoneBtn").addEventListener("click", () => buildExportText(true));
+  document.getElementById("deleteAllBtn").addEventListener("click", handleDeleteAll);
 });

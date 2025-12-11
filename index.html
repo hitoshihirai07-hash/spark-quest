@@ -2,71 +2,89 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>でんちペット（仮）</title>
+  <title>タスクメモパッド（自分用）</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <main class="container">
     <header class="header">
-      <h1>でんちペット（仮）</h1>
-      <p class="subtitle">雷っぽいちびキャラを、ちょっとだけ世話するだけのミニ育成。</p>
+      <h1>タスクメモパッド（自分用）</h1>
+      <p class="subtitle">
+        電車の中で思いついた「やること」や「あとでまとめること」を、<br>
+        ざっと書いてあとでスプレッドシートに転記するためのメモ用ツールです。
+      </p>
     </header>
 
-    <section class="pet-card">
-      <div class="pet-visual">
-        <img id="petImage" src="img/denchi_normal.png" alt="でんちペット" />
-      </div>
-      <div class="pet-status-text">
-        <p id="statusMessage">はじめまして。でんちペットです。</p>
-      </div>
-    </section>
-
-    <section class="status-card">
-      <h2>状態</h2>
-      <div class="bar-row">
-        <span class="label">なつき</span>
-        <div class="bar">
-          <div id="barMood" class="bar-inner mood"></div>
+    <section class="input-card">
+      <h2>新しいメモを追加</h2>
+      <form id="taskForm">
+        <div class="field">
+          <label for="date">日付</label>
+          <input id="date" name="date" type="date">
         </div>
-        <span id="valMood" class="bar-val"></span>
-      </div>
-      <div class="bar-row">
-        <span class="label">おなか</span>
-        <div class="bar">
-          <div id="barHunger" class="bar-inner hunger"></div>
+        <div class="field">
+          <label for="category">種別</label>
+          <select id="category" name="category">
+            <option value="小説">小説</option>
+            <option value="DQサイト">DQサイト</option>
+            <option value="RTA">RTA</option>
+            <option value="その他" selected>その他</option>
+          </select>
         </div>
-        <span id="valHunger" class="bar-val"></span>
-      </div>
-      <div class="bar-row">
-        <span class="label">げんき</span>
-        <div class="bar">
-          <div id="barEnergy" class="bar-inner energy"></div>
+        <div class="field">
+          <label for="title">タイトル / 用件（必須）</label>
+          <input id="title" name="title" type="text" placeholder="例：S2 第◯話 投稿日メモ">
         </div>
-        <span id="valEnergy" class="bar-val"></span>
-      </div>
-    </section>
-
-    <section class="actions-card">
-      <h2>お世話</h2>
-      <div class="actions">
-        <button id="btnPet" type="button">なでる</button>
-        <button id="btnSnack" type="button">おやつ</button>
-        <button id="btnRest" type="button">やすませる</button>
-      </div>
+        <div class="field">
+          <label for="memo">メモ（任意）</label>
+          <textarea id="memo" name="memo" rows="3" placeholder="例：投稿したらBOOTHのリンク追記する、など"></textarea>
+        </div>
+        <div class="actions">
+          <button type="submit" class="primary">追加</button>
+          <button type="button" id="clearFormBtn">クリア</button>
+        </div>
+      </form>
       <p class="hint">
-        ・「なでる」：なつきが上がるが、少しだけ疲れる。<br>
-        ・「おやつ」：おなかとなつきが上がるが、食べすぎ注意。<br>
-        ・「やすませる」：げんき回復。ただし少しおなかが減る。
-      </p>
-      <p class="hint small">
-        状態は自動では減りません。暇なときに思い出したときだけちょっとお世話するくらいのゆるさです。
+        ※ タイトルだけでもOKです。<br>
+        ※ スプレッドシートに転記したら「転記済」にチェックを入れておくと管理しやすいです。
       </p>
     </section>
 
-    <section class="log-card">
-      <h2>きろく</h2>
-      <div id="log" class="log"></div>
+    <section class="list-card">
+      <h2>メモ一覧</h2>
+      <div class="list-toolbar">
+        <div class="filter-group">
+          <label for="filterCategory">表示：</label>
+          <select id="filterCategory">
+            <option value="all">全部</option>
+            <option value="未転記">未転記のみ</option>
+            <option value="転記済">転記済のみ</option>
+          </select>
+        </div>
+        <div class="copy-group">
+          <button type="button" id="copyAllBtn">全部をコピー用に整形</button>
+          <button type="button" id="copyUndoneBtn">未転記だけ整形</button>
+        </div>
+      </div>
+      <div id="taskList" class="task-list"></div>
+    </section>
+
+    <section class="export-card">
+      <h2>スプレッドシート用テキスト</h2>
+      <p class="hint">
+        下のテキストは、ボタンを押すと「日付／種別／タイトル／メモ／転記済」の順でタブ区切りに整形されます。<br>
+        長押ししてコピーし、そのままスプレッドシートに貼り付ければ1行ずつ入ります。
+      </p>
+      <textarea id="exportText" rows="5" class="export-text" placeholder="ここにコピー用テキストが出ます"></textarea>
+    </section>
+
+    <section class="danger-card">
+      <h2>データの削除</h2>
+      <p class="hint">
+        ここで削除すると、この端末・このブラウザに保存されているメモがすべて消えます。
+      </p>
+      <button type="button" id="deleteAllBtn" class="danger">すべてのメモを削除</button>
     </section>
   </main>
 
