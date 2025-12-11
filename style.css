@@ -10,19 +10,19 @@ body {
 }
 
 .container {
-  max-width: 980px;
+  max-width: 720px;
   margin: 0 auto;
   padding: 12px;
 }
 
 .header {
   text-align: center;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 
 .header h1 {
   margin: 0;
-  font-size: 1.7rem;
+  font-size: 1.6rem;
 }
 
 .subtitle {
@@ -31,95 +31,106 @@ body {
   color: #555;
 }
 
-section {
+.pet-card,
+.status-card,
+.actions-card,
+.log-card {
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 10px 12px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.06);
   margin-bottom: 10px;
 }
 
-.status-card,
-.battle-card,
-.log-card {
-  background: #ffffff;
-  border-radius: 8px;
-  padding: 10px 12px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+.pet-visual {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.pet-visual img {
+  max-width: 220px;
+  width: 70%;
+  height: auto;
+  image-rendering: pixelated;
+}
+
+.pet-status-text {
+  text-align: center;
+  font-size: 0.9rem;
 }
 
 .status-card h2,
-.battle-card h2,
+.actions-card h2,
 .log-card h2 {
   margin: 0 0 8px;
   font-size: 1rem;
 }
 
-.status-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 4px 10px;
-  font-size: 0.8rem;
-}
-
-.status-grid div {
+.bar-row {
   display: flex;
-  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+  font-size: 0.85rem;
 }
 
 .label {
+  width: 60px;
   color: #555;
 }
 
-.floor-card-inner {
-  margin-top: 8px;
-  border-top: 1px solid #e5e7eb;
-  padding-top: 6px;
+.bar {
+  flex: 1;
+  height: 10px;
+  border-radius: 999px;
+  background: #e5e7eb;
+  overflow: hidden;
 }
 
-.floor-card-inner h3,
-.actions-card-inner h3 {
-  margin: 0 0 4px;
-  font-size: 0.9rem;
+.bar-inner {
+  height: 100%;
+  width: 50%;
+  border-radius: 999px;
+  transition: width 0.15s ease;
 }
 
-.floor-info {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 4px 8px;
+.bar-inner.mood {
+  background: #facc15;
+}
+
+.bar-inner.hunger {
+  background: #22c55e;
+}
+
+.bar-inner.energy {
+  background: #3b82f6;
+}
+
+.bar-val {
+  width: 40px;
+  text-align: right;
   font-size: 0.8rem;
-}
-
-.floor-controls {
-  display: flex;
-  justify-content: space-between;
-  gap: 6px;
-  margin-top: 6px;
-}
-
-.floor-hint {
-  margin-top: 4px;
-  font-size: 0.7rem;
-  color: #666;
-}
-
-.actions-card-inner {
-  margin-top: 8px;
-  border-top: 1px solid #e5e7eb;
-  padding-top: 6px;
+  color: #333;
 }
 
 .actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px;
 }
 
 button {
   border: none;
-  border-radius: 6px;
-  padding: 7px 9px;
-  font-size: 0.85rem;
+  border-radius: 999px;
+  padding: 7px 12px;
+  font-size: 0.9rem;
   cursor: pointer;
   background: #2563eb;
   color: #fff;
-  transition: background 0.15s ease, transform 0.05s ease;
+  transition: background 0.15s ease, transform 0.05s ease, box-shadow 0.1s ease;
+  box-shadow: 0 1px 2px rgba(15,23,42,0.15);
 }
 
 button:hover {
@@ -128,124 +139,17 @@ button:hover {
 
 button:active {
   transform: translateY(1px);
-}
-
-button:disabled {
-  opacity: 0.4;
-  cursor: default;
-  transform: none;
-}
-
-button.danger {
-  background: #dc2626;
-}
-
-button.danger:hover {
-  background: #b91c1c;
+  box-shadow: none;
 }
 
 .hint {
   margin: 6px 0 0;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   color: #555;
 }
 
 .hint.small {
-  font-size: 0.7rem;
-}
-
-.top-layout {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.battle-card {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.battle-side {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.battle-unit {
-  border-radius: 8px;
-  padding: 6px 8px;
-  background: #eff6ff;
-}
-
-.battle-unit.enemy-unit {
-  background: #fef3c7;
-}
-
-.unit-name {
-  font-size: 0.9rem;
-  font-weight: 600;
-}
-
-.unit-lv {
-  font-size: 0.8rem;
-  color: #555;
-  margin-top: 2px;
-}
-
-.hp-bar-wrap {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  margin-top: 4px;
-}
-
-.hp-label {
   font-size: 0.75rem;
-  color: #555;
-}
-
-.hp-bar {
-  flex: 1;
-  height: 8px;
-  border-radius: 999px;
-  background: #e5e7eb;
-  overflow: hidden;
-}
-
-.hp-bar-inner {
-  height: 100%;
-  width: 100%;
-  background: #22c55e;
-  transition: width 0.15s ease;
-}
-
-.hp-bar-inner.enemy {
-  background: #f97316;
-}
-
-.hp-text {
-  font-size: 0.75rem;
-  width: 70px;
-  text-align: right;
-}
-
-.command-card h3 {
-  margin: 0 0 4px;
-  font-size: 0.9rem;
-}
-
-.command-info {
-  font-size: 0.8rem;
-  margin-bottom: 4px;
-  min-height: 30px;
-}
-
-.commands {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  margin-bottom: 4px;
 }
 
 .log {
@@ -253,8 +157,8 @@ button.danger:hover {
   color: #e5e7eb;
   border-radius: 6px;
   padding: 8px;
-  min-height: 120px;
-  max-height: 260px;
+  min-height: 80px;
+  max-height: 220px;
   overflow-y: auto;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   font-size: 0.8rem;
@@ -268,32 +172,15 @@ button.danger:hover {
   color: #a5b4fc;
 }
 
-.log-line.player {
+.log-line.action {
   color: #bbf7d0;
 }
 
-.log-line.enemy {
-  color: #fecaca;
-}
-
-@media (min-width: 800px) {
-  .top-layout {
-    flex-direction: row;
-    align-items: flex-start;
-  }
-  .status-card {
-    flex: 1;
-  }
-  .battle-card {
-    flex: 1.1;
-  }
-}
-
 @media (max-width: 480px) {
-  .status-grid {
-    grid-template-columns: 1fr;
+  .bar-row {
+    font-size: 0.8rem;
   }
-  .floor-info {
-    grid-template-columns: 1fr;
+  .label {
+    width: 52px;
   }
 }
