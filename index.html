@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>スパーククエスト（仮）</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="container">
+    <header class="header">
+      <h1>スパーククエスト（仮）</h1>
+      <p class="subtitle">一体の雷系モンスターを育てて、塔の最上階を目指すミニRPG</p>
+    </header>
+
+    <section class="status-card">
+      <h2>ステータス</h2>
+      <div class="status-grid">
+        <div><span class="label">レベル</span><span id="level"></span></div>
+        <div><span class="label">EXP</span><span id="exp"></span></div>
+        <div><span class="label">次のレベルまで</span><span id="expToNext"></span></div>
+        <div><span class="label">HP</span><span id="hp"></span></div>
+        <div><span class="label">こうげき</span><span id="attack"></span></div>
+        <div><span class="label">ぼうぎょ</span><span id="defense"></span></div>
+        <div><span class="label">すばやさ</span><span id="speed"></span></div>
+        <div><span class="label">G</span><span id="gold"></span></div>
+      </div>
+    </section>
+
+    <section class="floor-card">
+      <h2>階層情報</h2>
+      <div class="floor-info">
+        <div>
+          <span class="label">現在の階層</span>
+          <span id="currentFloor"></span> / <span id="totalFloors"></span>
+        </div>
+        <div>
+          <span class="label">到達済み最高階層</span>
+          <span id="maxFloor"></span>
+        </div>
+        <div>
+          <span class="label">推奨レベル</span>
+          <span id="recommendedLevel"></span>
+        </div>
+      </div>
+      <div class="floor-controls">
+        <button id="prevFloorBtn" type="button">◀ 前の階層へ</button>
+        <button id="nextFloorBtn" type="button">次の階層へ ▶</button>
+      </div>
+    </section>
+
+    <section class="actions-card">
+      <h2>行動</h2>
+      <div class="actions">
+        <button id="exploreBtn" type="button">この階層に挑戦する</button>
+        <button id="resetBtn" type="button" class="danger">ゲームを最初から</button>
+      </div>
+      <p class="hint">
+        ※ 推奨レベルより低いと敗北しやすくなります。<br>
+        敗北すると経験値・ゴールドは一切入りませんが、ゴールドを支払って「前の階層からやり直し」することができます。
+      </p>
+    </section>
+
+    <section class="log-card">
+      <h2>ログ</h2>
+      <div id="log" class="log"></div>
+    </section>
+  </main>
+
+  <script src="game.js"></script>
+</body>
+</html>
