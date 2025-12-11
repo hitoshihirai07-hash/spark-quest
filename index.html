@@ -83,8 +83,8 @@
           </select>
         </div>
         <div class="copy-group">
-          <button type="button" id="copyAllBtn">全部をコピー用に整形</button>
-          <button type="button" id="copyUndoneBtn">未転記だけ整形</button>
+          <button type="button" id="copyAllBtn">全部コピー</button>
+          <button type="button" id="copyUndoneBtn">未転記だけコピー</button>
         </div>
       </div>
       <div id="taskList" class="task-list"></div>
@@ -94,8 +94,8 @@
       <h2>スプレッドシート用テキスト</h2>
       <p class="hint">
         ボタンを押すと、<strong>タスク名／カテゴリ／予定日／優先度／状態／メモ</strong> の順でタブ区切りのテキストを作ります。<br>
-        長押しでコピーして「タスク管理」のシートに貼り付ければ、そのまま各列に入ります。<br>
-        ※ 1行目はヘッダー行なので、必要に応じて削除して使ってください。
+        この欄の中身だけがコピー対象です（ヘッダー行は含みません）。<br>
+        長押しでコピーして「タスク管理」のシートに貼り付ければ、そのまま各列に入ります。
       </p>
       <textarea id="exportText" rows="5" class="export-text" placeholder="ここにコピー用テキストが出ます"></textarea>
     </section>

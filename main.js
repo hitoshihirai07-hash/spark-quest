@@ -1,7 +1,7 @@
-// タスクメモパッド（自分用・同期対応）
+// タスクメモパッド（自分用・同期対応・ヘッダー無しコピー）
 // 「タスク管理 - Tasks」の列構成に合わせてエクスポート＋スマホ↔PC手動同期
 
-const STORAGE_KEY = "task_pad_sync_v1";
+const STORAGE_KEY = "task_pad_sync_v2";
 
 let tasks = [];
 
@@ -204,9 +204,9 @@ function handleClearForm() {
 
 // 「タスク管理 - Tasks」に合わせたエクスポート
 // 列順：タスク名, カテゴリ, 予定日, 優先度, 状態, メモ
+// ※ ヘッダー行は含めない
 function buildExportText(onlyUndone = false) {
-  const header = "タスク名\tカテゴリ\t予定日\t優先度\t状態\tメモ";
-  const lines = [header];
+  const lines = [];
 
   const sorted = [...tasks].sort((a, b) => {
     if (a.date === b.date) {
@@ -229,9 +229,12 @@ function buildExportText(onlyUndone = false) {
   const text = lines.join("\n");
   const textArea = document.getElementById("exportText");
   textArea.value = text;
+
+  // テキストエリア内だけ選択
   textArea.focus();
   textArea.select();
 
+  // 対応ブラウザならクリップボードに直接コピー
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(text).catch(() => {});
   }
@@ -248,7 +251,7 @@ function handleDeleteAll() {
 // ---- スマホ ↔ PC 手動同期 ----
 function exportSyncData() {
   const data = {
-    version: 1,
+    version: 2,
     exportedAt: new Date().toISOString(),
     tasks
   };
@@ -277,7 +280,6 @@ function importSyncData() {
     return;
   }
   if (!obj || !Array.isArray(obj.tasks)) {
-    // tasksだけ貼った場合も考慮
     if (Array.isArray(obj)) {
       const ok2 = window.confirm("このデータですべてのタスクを上書きしますか？");
       if (!ok2) return;
